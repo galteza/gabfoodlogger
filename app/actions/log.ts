@@ -15,13 +15,13 @@ export async function logFoodToDb(foodData: any, portion: number, targetDate: st
         {
           user_id: DUMMY_USER_ID,
           date: targetDate, // Inject the selected date here
-          food_name: foodData.foodName,
+          food_name: foodData.name,
           calories: Math.round(foodData.calories * portion),
           protein: Number((foodData.protein * portion).toFixed(1)),
           carbs: Number((foodData.carbs * portion).toFixed(1)),
           fats: Number((foodData.fats * portion).toFixed(1)),
           portion_multiplier: portion,
-          entry_type: foodData.foodName === "Scanned Label" ? "ai" : "barcode",
+          entry_type: foodData.name === "Scanned Label" ? "ai" : "barcode",
         },
       ]);
 
