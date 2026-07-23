@@ -74,6 +74,8 @@ export async function logFoodToJournal(foodId: string, targetDate?: string) {
       user_id: DUMMY_USER_ID,
       date: logDate,
       food_name: food.name,
+      portionsize: food.portionsize || 1, // FIXED: Copy over portion size
+      unit: food.unit || "", // FIXED: Copy over unit
       calories: food.calories,
       protein: food.protein || 0,
       carbs: food.carbs || 0,
@@ -103,7 +105,7 @@ export async function saveFoodToDatabase(food: {
   const payload = {
     user_id: DUMMY_USER_ID,
     name: food.name,
-    portionsize: Number(food.portionsize || "").toFixed(2),
+    portionsize: Number(food.portionsize || 1), // FIXED: Cast as number and default to 1
     unit: food.unit || "",
     calories: Number(food.calories.toFixed(2)),
     protein: Number((food.protein || 0).toFixed(2)),
@@ -151,6 +153,8 @@ export async function deleteSavedFood(foodId: string) {
 
 export async function logFoodToDiary(food: {
   name: string;
+  portionsize?: number; // FIXED: Added to interface
+  unit?: string; // FIXED: Added to interface
   calories: number;
   protein?: number;
   carbs?: number;
@@ -165,6 +169,8 @@ export async function logFoodToDiary(food: {
       user_id: DUMMY_USER_ID,
       date: logDate,
       food_name: food.name,
+      portionsize: Number(food.portionsize || 1), // FIXED: Insert into DB
+      unit: food.unit || "", // FIXED: Insert into DB
       calories: Number(food.calories.toFixed(2)),
       protein: Number((food.protein || 0).toFixed(2)),
       carbs: Number((food.carbs || 0).toFixed(2)),

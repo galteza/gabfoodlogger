@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { searchSavedFoods, deleteSavedFood } from "@/app/actions/food"; // Import your DB actions directly here
 
-export default function AddFoodSearch({ setStagedFood, setFoodToEdit }: { setStagedFood: (food: any) => void; setFoodToEdit: (food: any) => void }) {
+export default function AddFoodSearch({ setStagedFood, 
+    setFoodToEdit, 
+    setActiveTab }: { setStagedFood: (food: any) => void; 
+        setFoodToEdit: (food: any) => void; 
+        setActiveTab: (tab: "search" | "quick" | "barcode" | "nutrition" | "consultation") => void }) {
   // 1. All the state lives directly inside this file
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -25,6 +29,7 @@ export default function AddFoodSearch({ setStagedFood, setFoodToEdit }: { setSta
 
   const handleEdit = (food: any) => {
     setFoodToEdit(food);
+    setActiveTab("quick"); // Switch to the Quick tab for editing
     // You'll handle editing logic here
     console.log("Editing:", food.name);
   }

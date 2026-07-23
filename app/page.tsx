@@ -147,6 +147,7 @@ export default function Home() {
           setPortion={setPortion} 
           isSaving={isSaving} 
           onSave={handleSaveToDb}
+          onCancel={() => setStagedFood(null)}
          />
 
         {/* Add Food Section - 2. FIX: Passed the date and refresh function */}

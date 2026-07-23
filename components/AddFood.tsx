@@ -66,6 +66,7 @@ export default function AddFood({ setStagedFood }: AddFoodProps) {
         <AddFoodSearch 
           setStagedFood={setStagedFood} 
           setFoodToEdit={setFoodToEdit}
+          setActiveTab={setActiveTab}
         />
       )}
 
@@ -73,6 +74,7 @@ export default function AddFood({ setStagedFood }: AddFoodProps) {
         <AddFoodQuick 
           setStagedFood={setStagedFood} 
           foodToEdit={foodToEdit}
+          setFoodToEdit={setFoodToEdit}
         />
       )}
 

@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { saveFoodToDatabase } from "@/app/actions/food"; // Import your DB actions directly here
 
 interface AddFoodQuickProps {
-  setStagedFood: (food: any) => void;
-  foodToEdit?: any | null;
+    setStagedFood: (food: any) => void;
+    foodToEdit?: any | null;
+    setFoodToEdit: (food: any | null) => void;
 }
 
-export default function AddFoodQuick({ setStagedFood, foodToEdit }: AddFoodQuickProps) {
+export default function AddFoodQuick({ setStagedFood, foodToEdit, setFoodToEdit }: AddFoodQuickProps) {
   
   // 1. All form state lives isolated inside this component
   const [foodName, setFoodName] = useState("");
@@ -33,6 +34,8 @@ export default function AddFoodQuick({ setStagedFood, foodToEdit }: AddFoodQuick
   }, [foodToEdit]);
 
   const resetForm = () => {
+    foodToEdit && setStagedFood(null); // Clear the staged food if we were editing
+    setFoodToEdit(null); // Clear the foodToEdit state
     setFoodName(""); 
     setPortionSize("");
     setUnit("");

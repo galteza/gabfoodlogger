@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 type StagedFood = any;
 
 interface PreviewEntryProps {
@@ -10,6 +8,7 @@ interface PreviewEntryProps {
     setPortion: (v: number) => void;
     isSaving: boolean;
     onSave: () => void;
+    onCancel: () => void; // 1. Add this new prop!
 }
 
 export default function PreviewEntry({ 
@@ -18,16 +17,30 @@ export default function PreviewEntry({
     setPortion,
     isSaving,
     onSave,
+    onCancel, // 2. Pull it in here
  }: PreviewEntryProps) {
+    
     // If no food is staged yet, render nothing so the UI stays clean
     if (!stagedFood) return null;
 
     return (
         <div className="w-full p-6 bg-white border rounded-xl shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-            {/* Header / Name */}
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-4">
-                {stagedFood.name || stagedFood.foodName}
-            </h2>
+            
+            {/* Header / Name & Close Button */}
+            <div className="flex justify-between items-start mb-4">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white pr-4">
+                    {stagedFood.name || stagedFood.foodName}
+                </h2>
+                
+                {/* 3. Clean, subtle X button in the top right */}
+                <button 
+                    onClick={onCancel}
+                    className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
+                    title="Remove from preview"
+                >
+                    ✕
+                </button>
+            </div>
             
             {/* Macro Calculation Row */}
             <div className="grid grid-cols-4 gap-2 text-center mb-6">
