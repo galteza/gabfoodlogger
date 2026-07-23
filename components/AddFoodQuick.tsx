@@ -20,6 +20,19 @@ export default function AddFoodQuick({ setStagedFood, foodToEdit, setFoodToEdit 
   const [carbs, setCarbs] = useState("");
   const [fats, setFats] = useState("");
 
+  const handleStageForPreview = () => {
+    if (!foodName || !calories) return alert("Name and Calories required!");
+    setStagedFood({
+      name: foodName,
+      portionsize: Number(portionsize) || 1,
+      unit: unit || "serving",
+      calories: Number(calories),
+      protein: Number(protein),
+      carbs: Number(carbs),
+      fats: Number(fats)
+    });
+  }
+
   // 2. If a user clicks "Edit" and passes a food item, populate the form automatically
   useEffect(() => {
     if (foodToEdit) {
@@ -91,7 +104,7 @@ export default function AddFoodQuick({ setStagedFood, foodToEdit, setFoodToEdit 
       </div>
 
       <div className="grid grid-cols-2 gap-2 mt-2">
-        <button onClick={setStagedFood} className="py-2 bg-green-600 text-white font-bold text-xs rounded-xl hover:bg-green-700">
+        <button onClick={handleStageForPreview} className="py-2 bg-green-600 text-white font-bold text-xs rounded-xl hover:bg-green-700">
           Preview & Log
         </button>
         <button onClick={() => saveFoodToDatabase({ name: foodName, portionsize: Number(portionsize), unit: unit, calories: Number(calories), protein: Number(protein), carbs: Number(carbs), fats: Number(fats) })} className="py-2 bg-blue-600 text-white font-bold text-xs rounded-xl hover:bg-blue-700">
