@@ -47,29 +47,33 @@ import PreviewEntry from "@/components/PreviewEntry";
 import AddFood from "@/components/AddFood";
 import Profile from "@/components/Profile";
 
-import { logFoodToDb } from "./actions/log"; // Assuming delete is now inside LoggedFoods component
+import { logFoodToDb } from "./actions/log"; 
 import { getDayStats } from "./actions/dashboard";
+
+// Helper function to ALWAYS get the correct YYYY-MM-DD in the user's local timezone
+const getLocalDateString = (dateObj = new Date()) => {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function Home() {
 
   // ======== SET UP VARIABLES ========
 
   const [name, setName] = useState("Gabriel");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // For ensuring the correct pie is displayed based on selected date
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); 
+  // Initialize with the correct local date
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString()); 
   const [dashboardStats, setDashboardStats] = useState<any>(null);
 
-  // For previewing food item before logging
   const [stagedFood, setStagedFood] = useState<any>(null); 
   const [portion, setPortion] = useState<number>(1.0);
   
   // ======== FUNCTIONS ========
 
-  // Load dashboard stats for the selected date
   const loadStats = async (dateStr: string) => {
     const stats = await getDayStats(dateStr);
     if (stats.success) {
@@ -81,10 +85,32 @@ export default function Home() {
     loadStats(selectedDate);
   }, [selectedDate]);
 
+  // Midnight Rollover Listener: Refreshes to "Today" if you leave the tab open overnight
+  useEffect(() => {
+    const handleFocus = () => {
+      const actualToday = getLocalDateString();
+      // If the day changed while the app was in the background, gently push them to the new today
+      if (selectedDate !== actualToday && selectedDate === getLocalDateString(new Date(Date.now() - 86400000))) {
+         setSelectedDate(actualToday);
+      }
+    };
+    
+    window.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") handleFocus();
+    });
+    window.addEventListener("focus", handleFocus);
+    
+    return () => {
+      window.removeEventListener("visibilitychange", handleFocus);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [selectedDate]);
+
   const changeDate = (days: number) => {
-    const d = new Date(selectedDate);
+    // Adding "T00:00:00" ensures JavaScript parses the string in local time, not UTC!
+    const d = new Date(selectedDate + "T00:00:00");
     d.setDate(d.getDate() + days);
-    setSelectedDate(d.toISOString().split('T')[0]);
+    setSelectedDate(getLocalDateString(d));
   };
 
   const handleSaveToDb = async () => {
@@ -94,10 +120,8 @@ export default function Home() {
     const result = await logFoodToDb(stagedFood, portion, selectedDate);
     
     if (result.success) {
-      setStagedFood(null); // Clear the staged food after logging
-      setPortion(1.0); // Reset portion to default
-      
-      // 1. FIX: Refresh the chart and list instantly!
+      setStagedFood(null); 
+      setPortion(1.0); 
       loadStats(selectedDate); 
     } else {
       alert("Failed to save to diary.");
@@ -110,7 +134,6 @@ export default function Home() {
     <div className="flex flex-col flex-1 items-center min-h-screen bg-zinc-50 font-sans dark:bg-black p-4 pb-20">
       <main className="flex w-full max-w-md flex-col items-center gap-6 mt-4">
 
-        {/* Gave your header some Tailwind styling so it looks good! */}
         <h1 className="text-xl font-bold text-center text-black dark:text-white mb-2">
           Hi there, {name}! Welcome to your daily food tracker. Happy logging! 🎉
         </h1>
@@ -150,12 +173,12 @@ export default function Home() {
           onCancel={() => setStagedFood(null)}
          />
 
-        {/* Add Food Section - 2. FIX: Passed the date and refresh function */}
+        {/* Add Food Section */}
         <AddFood 
           setStagedFood={setStagedFood} 
          />
 
-        {/* Profile Update Section - 3. FIX: Passed the refresh function */}
+        {/* Profile Update Section */}
         <Profile onTargetsUpdated={() => loadStats(selectedDate)} />
 
       </main>
