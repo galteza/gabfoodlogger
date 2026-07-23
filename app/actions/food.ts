@@ -11,7 +11,6 @@ const DUMMY_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 export async function lookupBarcode(barcode: string) {
   try {
-    // Ping the OpenFoodFacts API
     const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
     const data = await response.json();
 
@@ -19,10 +18,11 @@ export async function lookupBarcode(barcode: string) {
       const product = data.product;
       const nutriments = product.nutriments;
       
-      // Extract the macros (defaulting to 100g values for the prototype)
       return {
         success: true,
         foodName: product.product_name || "Unknown Product",
+        portionsize: nutriments['serving_size'] ? parseFloat(nutriments['serving_size']) : 1,
+        unit: nutriments['serving_size'] ? nutriments['serving_size'].replace(/[0-9.]/g, '').trim() : "serving",
         calories: nutriments['energy-kcal_100g'] || 0,
         protein: nutriments.proteins_100g || 0,
         carbs: nutriments.carbohydrates_100g || 0,
@@ -32,7 +32,7 @@ export async function lookupBarcode(barcode: string) {
     } else {
       return { success: false, error: "Food not found in database" };
     }
-  } catch (error) {
+  } catch {
     return { success: false, error: "API connection failed" };
   }
 }
@@ -54,43 +54,32 @@ export async function searchSavedFoods(query: string) {
   return data;
 }
 
-export async function quickAddFood(food: {
-  name: string;
-  calories: number;
-  protein?: number;
-  carbs?: number;
-  fats?: number;
-  description?: string;
-}) {
-  const { data, error } = await supabase
+export async function logFoodToJournal(foodId: string, targetDate?: string) {
+  const { data: food, error: fetchError } = await supabase
     .from("saved_foods")
-    .insert({
-      user_id: DUMMY_USER_ID,
-      name: food.name,
-      calories: food.calories,
-      protein: food.protein || 0,
-      carbs: food.carbs || 0,
-      fats: food.fats || 0,
-      description: food.description || "",
-    })
-    .select()
+    .select("*")
+    .eq("id", foodId)
     .single();
 
-  if (error) {
-    console.error("Quick Add Error:", error);
-    return { success: false, error: error.message };
+  if (fetchError || !food) {
+    console.error("Food lookup error:", fetchError);
+    return { success: false };
   }
-  return { success: true, data };
-}
 
-// Logs a food item to your daily consumption table (assuming you have a food_logs table)
-export async function logFoodToJournal(foodId: string) {
+  const logDate = targetDate || new Date().toISOString().split("T")[0];
+
   const { error } = await supabase
     .from("food_logs")
     .insert({
       user_id: DUMMY_USER_ID,
-      food_id: foodId,
-      logged_at: new Date().toISOString(),
+      date: logDate,
+      food_name: food.name,
+      calories: food.calories,
+      protein: food.protein || 0,
+      carbs: food.carbs || 0,
+      fats: food.fats || 0,
+      portion_multiplier: 1,
+      entry_type: "saved",
     });
 
   if (error) {
@@ -103,6 +92,8 @@ export async function logFoodToJournal(foodId: string) {
 export async function saveFoodToDatabase(food: {
   id?: string;
   name: string;
+  portionsize?: number;
+  unit?: string;
   calories: number;
   protein?: number;
   carbs?: number;
@@ -112,6 +103,8 @@ export async function saveFoodToDatabase(food: {
   const payload = {
     user_id: DUMMY_USER_ID,
     name: food.name,
+    portionsize: Number(food.portionsize || "").toFixed(2),
+    unit: food.unit || "",
     calories: Number(food.calories.toFixed(2)),
     protein: Number((food.protein || 0).toFixed(2)),
     carbs: Number((food.carbs || 0).toFixed(2)),
@@ -122,7 +115,6 @@ export async function saveFoodToDatabase(food: {
   let result;
 
   if (food.id) {
-    // Update existing item
     result = await supabase
       .from("saved_foods")
       .update(payload)
@@ -130,7 +122,6 @@ export async function saveFoodToDatabase(food: {
       .select()
       .single();
   } else {
-    // Insert new item
     result = await supabase
       .from("saved_foods")
       .insert(payload)
@@ -166,21 +157,20 @@ export async function logFoodToDiary(food: {
   fats?: number;
   logDate?: string;
 }) {
-  // Use selected log date or default to current ISO timestamp
-  const logTimestamp = food.logDate 
-    ? new Date(food.logDate).toISOString() 
-    : new Date().toISOString();
+  const logDate = food.logDate || new Date().toISOString().split("T")[0];
 
   const { error } = await supabase
     .from("food_logs")
     .insert({
       user_id: DUMMY_USER_ID,
-      name: food.name,
+      date: logDate,
+      food_name: food.name,
       calories: Number(food.calories.toFixed(2)),
       protein: Number((food.protein || 0).toFixed(2)),
       carbs: Number((food.carbs || 0).toFixed(2)),
       fats: Number((food.fats || 0).toFixed(2)),
-      logged_at: logTimestamp,
+      portion_multiplier: 1,
+      entry_type: "manual",
     });
 
   if (error) {

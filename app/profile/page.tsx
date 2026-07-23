@@ -90,6 +90,7 @@ export default function ProfilePage() {
     } else if (formula === "katch") {
       setFormula("mifflin");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bodyFat]);
 
   return (
